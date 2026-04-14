@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../../Service/AxiosSetup";
 import GradingSidebar from "./GradingSidebar";
+import DocxViewer from "./DocxViewer";
 import { 
   Layout, 
   Button, 
@@ -76,6 +77,7 @@ const MainPoint = () => {
   const [plagiarismThreshold, setPlagiarismThreshold] = useState(30);
   const [checkingPlagiarism, setCheckingPlagiarism] = useState(false);
   const [similarityResult, setSimilarityResult] = useState(null);
+  const [originalDocFiles, setOriginalDocFiles] = useState([]);
 
   const fetchStudentData = useCallback(async () => {
     if (!examId || !examStudentId) {
@@ -123,9 +125,13 @@ const MainPoint = () => {
           if (foundIndex !== -1) {
             setStudent(foundStudent);
             setCurrentIndex(foundIndex);
-            const lastFile = foundStudent.docFiles[foundStudent.docFiles.length - 1];
-            setFilePath(lastFile.filePath);
-            setDocFileId(lastFile.id || lastFile.docFileId);
+            setOriginalDocFiles(foundStudent.docFiles);
+            // Priority: Question 1 split file > original file (no questionNumber) > first file
+            const q1File = foundStudent.docFiles.find(df => df.questionNumber === 1);
+            const originalFile = foundStudent.docFiles.find(df => !df.questionNumber || df.questionNumber === 0);
+            const defaultFile = q1File || originalFile || foundStudent.docFiles[0];
+            setFilePath(defaultFile.filePath);
+            setDocFileId(defaultFile.id || defaultFile.docFileId);
           } else {
             setError("Không tìm thấy học sinh trong danh sách có thể chấm.");
           }
@@ -457,6 +463,24 @@ const MainPoint = () => {
     }, 500);
   };
 
+  const handleQuestionSelect = (questionNumber) => {
+    if (!originalDocFiles || originalDocFiles.length === 0) return;
+    
+    // Find split file for this question
+    const splitFile = originalDocFiles.find(df => df.questionNumber === questionNumber);
+    if (splitFile) {
+      setFilePath(splitFile.filePath);
+      setDocFileId(splitFile.id || splitFile.docFileId);
+    } else {
+      // Fallback to original/last file if no split file found for this specific question
+      const lastFile = originalDocFiles[originalDocFiles.length - 1];
+      if (lastFile && filePath !== lastFile.filePath) {
+        setFilePath(lastFile.filePath);
+        setDocFileId(lastFile.id || lastFile.docFileId);
+      }
+    }
+  };
+
   const calculateTotalScore = () => {
     let total = 0;
     questions.forEach((question) => {
@@ -526,6 +550,14 @@ const MainPoint = () => {
       return url;
     }
 
+    // Use the backend proxy endpoint to stream the file, then render via Google Docs Viewer
+    if (docFileId) {
+      const proxyUrl = `${import.meta.env.VITE_API_BASE_URL}/exams/doc-files/${docFileId}/proxy`;
+      const encodedProxy = encodeURIComponent(proxyUrl);
+      return `https://docs.google.com/gview?url=${encodedProxy}&embedded=true`;
+    }
+
+    // Fallback: try Office Online Viewer with the raw URL
     const encodedUrl = encodeURIComponent(url);
     return `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}`;
   };
@@ -771,17 +803,7 @@ const MainPoint = () => {
               </Empty>
             </div>
           ) : filePath ? (
-            <div style={{ height: 'calc(100vh - 64px)' }}>
-              <iframe
-                src={getOfficeViewerUrl(filePath)}
-                width="100%"
-                height="100%"
-                frameBorder="0"
-                style={{ border: 'none' }}
-                title="Office Document Viewer"
-                allowFullScreen
-              ></iframe>
-            </div>
+            <DocxViewer docFileId={docFileId} />
           ) : (
             <Empty description="Không có file để hiển thị" />
           )}
@@ -804,7 +826,7 @@ const MainPoint = () => {
             top: 64
           }}
         >
-          <GradingSidebar
+           <GradingSidebar
             isBaremCollapsed={isBaremCollapsed}
             setIsBaremCollapsed={setIsBaremCollapsed}
             setShowDescriptionModal={setShowDescriptionModal}
@@ -819,6 +841,7 @@ const MainPoint = () => {
             saveMessage={saveMessage}
             saving={saving}
             handleSave={handleSave}
+            onQuestionSelect={handleQuestionSelect}
           />
         </Sider>
       </Layout>

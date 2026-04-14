@@ -39,7 +39,8 @@ const GradingSidebar = ({
   calculateTotalScore,
   saveMessage,
   saving,
-  handleSave
+  handleSave,
+  onQuestionSelect
 }) => {
   const totalMaxScore = roundScoreTotal(
     questions.reduce((sum, q) => sum + Number(q.maxScore || 0), 0)
@@ -97,17 +98,26 @@ const GradingSidebar = ({
                     key={question.id}
                     size="small"
                     title={
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Space>
-                          <Text strong>Câu {question.questionNumber}:</Text>
-                          <Text style={{ fontSize: '13px' }}>{question.questionText}</Text>
-                        </Space>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Space>
+                            <Text strong>Câu {question.questionNumber}:</Text>
+                            <Text style={{ fontSize: '13px' }}>{question.questionText}</Text>
+                          </Space>
+                          <Text strong style={{ fontSize: '12px' }}>
+                            Tối đa: {roundScoreTotal(question.maxScore)}đ
+                          </Text>
+                        </div>
+                        <Button
+                          size="small"
+                          type="dashed"
+                          icon={<FileTextOutlined />}
+                          onClick={() => onQuestionSelect && onQuestionSelect(question.questionNumber)}
+                          style={{ width: '100%' }}
+                        >
+                          Xem đề bài & bài làm câu {question.questionNumber}
+                        </Button>
                       </div>
-                    }
-                    extra={
-                      <Text strong style={{ fontSize: '12px' }}>
-                        Tối đa: {roundScoreTotal(question.maxScore)}đ
-                      </Text>
                     }
                   >
                     {question.rubrics && question.rubrics.length > 0 && (
@@ -136,6 +146,7 @@ const GradingSidebar = ({
                                   precision={rubric.maxScore === 1 ? 2 : 1}
                                   placeholder={`0 - ${rubric.maxScore}`}
                                   value={score[rubric.id] || ""}
+                                  onFocus={() => onQuestionSelect && onQuestionSelect(question.questionNumber)}
                                   onChange={(value) => {
                                     if (value === null || value === undefined) {
                                       handleInput(rubric.id, value);
