@@ -499,10 +499,21 @@ const MainPoint = () => {
     setSaveMessage("");
     try {
       const totalScore = calculateTotalScore();
+      
+      const payloadDetails = [];
+      Object.keys(score).forEach(rubricId => {
+        payloadDetails.push({
+          rubricId: parseInt(rubricId),
+          score: parseFloat(score[rubricId]) || 0
+        });
+      });
+
       const payload = {
+        examId: parseInt(examId),
         examStudentId: parseInt(examStudentId),
         totalScore: totalScore,
         comment: comment || "",
+        details: payloadDetails,
         gradedAt: new Date().toISOString(),
         gradedBy: "",
         attempt: gradeHistory.length > 0 ? gradeHistory.length + 1 : 1,
