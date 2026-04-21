@@ -7,6 +7,7 @@ import PointList from "./Page/PointList/PointList";
 import PointTurnDetail from "./Page/PointTurnDetail/PointTurnDetail";
 import ListStudent from "./Page/ListStudent/ListStudent";
 import PlagiarismDetail from "./Page/PlagiarismDetail/PlagiarismDetail";
+import PacketSimilarity from "./Page/PacketSimilarity/PacketSimilarity";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/list-student" element={<ListStudent />} />
         <Route path="/main-point" element={<MainPoint />} />
         <Route path="/plagiarism-detail" element={<PlagiarismDetail />} />
+        <Route path="/packet-similarity" element={<PacketSimilarity />} />
       </Routes>
     </Router>
   );

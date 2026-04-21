@@ -1,8 +1,23 @@
 import React from "react";
-import { Card, Space, Typography, Segmented, Button } from "antd";
-import { AppstoreOutlined, OrderedListOutlined, UploadOutlined, ArrowLeftOutlined, TableOutlined, DownloadOutlined } from "@ant-design/icons";
+import { Card, Space, Typography, Button } from "antd";
+import {
+  UploadOutlined,
+  ArrowLeftOutlined,
+  DownloadOutlined,
+  ExperimentOutlined,
+} from "@ant-design/icons";
 
-const StudentToolbar = ({ totalItems, viewMode, onViewChange, onUploadClick, onBack, examInfo, examLoading, onExport, onViewExportHistory, role }) => {
+const StudentToolbar = ({
+  totalItems,
+  onUploadClick,
+  onBack,
+  examInfo,
+  examLoading,
+  onExport,
+  onViewExportHistory,
+  onPacketSimilarityClick,
+  role,
+}) => {
   return (
     <Card bodyStyle={{ padding: 24 }}>
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
@@ -27,15 +42,18 @@ const StudentToolbar = ({ totalItems, viewMode, onViewChange, onUploadClick, onB
             </Button>
           </Space>
         </Space>
-        <Space wrap>
-          {role === "EXAMINATION" && (
-            <Button type="primary" icon={<UploadOutlined />} onClick={onUploadClick}>
-              Upload
+          <Space wrap>
+            {role === "EXAMINATION" && (
+              <Button type="primary" icon={<UploadOutlined />} onClick={onUploadClick}>
+                Upload
+              </Button>
+            )}
+            <Button icon={<ExperimentOutlined />} onClick={onPacketSimilarityClick}>
+              Packet Similarity
             </Button>
-          )}
-          <Button type="primary" icon={<DownloadOutlined />} onClick={onExport}>
-            Xuất danh sách điểm
-          </Button>
+            <Button type="primary" icon={<DownloadOutlined />} onClick={onExport}>
+              Xuất danh sách điểm
+            </Button>
           <Button onClick={onViewExportHistory}>Lịch sử chấm điểm</Button>
         </Space>
       </Space>

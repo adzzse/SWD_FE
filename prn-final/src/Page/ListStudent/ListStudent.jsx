@@ -769,6 +769,7 @@ const ListStudent = () => {
               fetchExportHistory();
               setShowExportHistory(true);
             }}
+            onPacketSimilarityClick={() => navigate(`/packet-similarity?examId=${examId}`)}
             onBack={() => navigate("/point-list")}
             examInfo={examInfo}
             examLoading={examLoading}
