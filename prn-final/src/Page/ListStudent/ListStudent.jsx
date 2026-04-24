@@ -82,6 +82,35 @@ const ListStudent = () => {
   const [exportLoading, setExportLoading] = useState(false);
   const [exportHistory, setExportHistory] = useState([]);
   const [showExportHistory, setShowExportHistory] = useState(false);
+
+  const getApiErrorMessage = (err, fallbackMessage) => {
+    const responseData = err?.response?.data;
+
+    if (!responseData) {
+      return fallbackMessage;
+    }
+
+    if (typeof responseData === "string") {
+      return responseData;
+    }
+
+    const nestedData =
+      responseData?.data && typeof responseData.data === "object"
+        ? responseData.data
+        : null;
+
+    const parts = [
+      responseData.message,
+      responseData.detail,
+      nestedData?.message,
+      nestedData?.detail,
+      nestedData?.inner,
+      nestedData?.exception,
+    ].filter(Boolean);
+
+    return parts.length > 0 ? parts.join(": ") : fallbackMessage;
+  };
+
   // Hàm fetch tổng số items mà không thay đổi view hiện tại
   const fetchTotalItems = async () => {
     if (!examId) return;
@@ -388,6 +417,18 @@ const ListStudent = () => {
 
   // Description upload handlers
   const handleDescriptionFileChange = (file) => {
+    const allowedImageTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ];
+
+    if (file && !allowedImageTypes.includes(file.type)) {
+      setDescriptionError("Chỉ hỗ trợ file ảnh .jpg, .jpeg, .png, .gif, .webp.");
+      return;
+    }
+
     if (file) {
       setDescriptionFile(file);
       setDescriptionFileName(file.name);
@@ -413,7 +454,7 @@ const ListStudent = () => {
     try {
       setDescriptionLoading(true);
       const formDataToSend = new FormData();
-      formDataToSend.append("file", descriptionFile);
+      formDataToSend.append("file", descriptionFile, descriptionFile.name);
 
       const response = await axiosInstance.put(
         `exams/${examId}/description`,
@@ -443,11 +484,9 @@ const ListStudent = () => {
       setDescriptionLoading(false);
     } catch (err) {
       console.error("Lỗi upload file description:", err);
-      if (err.response && err.response.data) {
-        setDescriptionError(err.response.data.message || "Không thể upload file description.");
-      } else {
-        setDescriptionError("Không thể kết nối đến máy chủ.");
-      }
+      setDescriptionError(
+        getApiErrorMessage(err, "Không thể upload file description.")
+      );
       message.error("Upload file description thất bại.");
       setDescriptionLoading(false);
       setDescriptionProgress(0);
@@ -481,7 +520,7 @@ const ListStudent = () => {
     try {
       setDetailsLoading(true);
       const formDataToSend = new FormData();
-      formDataToSend.append("file", detailsFile);
+      formDataToSend.append("file", detailsFile, detailsFile.name);
 
       const response = await axiosInstance.post(
         `exams/${examId}/details`,
@@ -514,11 +553,7 @@ const ListStudent = () => {
       setDetailsLoading(false);
     } catch (err) {
       console.error("Lỗi upload file Excel:", err);
-      if (err.response && err.response.data) {
-        setDetailsError(err.response.data.message || "Không thể upload file Excel.");
-      } else {
-        setDetailsError("Không thể kết nối đến máy chủ.");
-      }
+      setDetailsError(getApiErrorMessage(err, "Không thể upload file Excel."));
       message.error("Upload file Excel thất bại.");
       setDetailsLoading(false);
       setDetailsProgress(0);
@@ -644,7 +679,7 @@ const ListStudent = () => {
     try {
       setZipLoading(true);
       const formDataToSend = new FormData();
-      formDataToSend.append("file", zipFile);
+      formDataToSend.append("file", zipFile, zipFile.name);
 
       const response = await axiosInstance.post(
         `exams/${examId}/upload-zip`,
@@ -692,11 +727,7 @@ const ListStudent = () => {
       }
     } catch (err) {
       console.error("Lỗi upload file ZIP:", err);
-      if (err.response && err.response.data) {
-        setZipError(err.response.data.message || "Không thể upload file ZIP.");
-      } else {
-        setZipError("Không thể kết nối đến máy chủ.");
-      }
+      setZipError(getApiErrorMessage(err, "Không thể upload file ZIP."));
       message.error("Upload file ZIP thất bại.");
       setZipLoading(false);
       setZipProgress(0);
@@ -769,6 +800,7 @@ const ListStudent = () => {
               fetchExportHistory();
               setShowExportHistory(true);
             }}
+            onPacketSimilarityClick={() => navigate(`/packet-similarity?examId=${examId}`)}
             onBack={() => navigate("/point-list")}
             examInfo={examInfo}
             examLoading={examLoading}
